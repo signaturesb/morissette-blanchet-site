@@ -675,7 +675,7 @@ function questionFor(step) {
   switch (step) {
     case 0: return { title: 'Salut ! Moi, c’est Batiss.', subtitle: 'Choisissez un service ou autre !', choices: serviceOptions };
     case 1: return { title: flow().subtypeQuestion, subtitle: 'Choisissez l’option la plus proche. Vous pourrez préciser à l’appel.', choices: flow().subtypes };
-    case 2: return { title: 'Décrivez votre projet, si ça vous le dit.', subtitle: 'Ou entrez vos informations pour un rappel rapide d’un entrepreneur.', input: 'description' };
+    case 2: return { title: 'Décrivez votre projet, si ça vous le dit.', subtitle: 'Ou cliquez directement pour recevoir un appel.', input: 'description' };
     default: return { title: 'On vous rappelle.', subtitle: '' };
   }
 }

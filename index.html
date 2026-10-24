@@ -808,6 +808,23 @@ function setWriting(on) {
   progressLabel.parentElement.classList.toggle('is-writing', on);
 }
 
+/* Le haut du bloc d'étape : la rangée de réaction qui précède le message
+   courant quand il y en a une, sinon la rangée du message lui-même. */
+function stepTopAnchor(el) {
+  if (!el || !el.closest) return el || null;
+  const row = el.closest('.chat-thread-row') || el.closest('.chat-row-avatar');
+  if (!row) return el;
+  let prev = row.previousElementSibling;
+  while (prev) {
+    if (prev.classList.contains('chat-thread-row')) {
+      if (prev.querySelector('.chat-reaction')) return prev;
+      break;
+    }
+    prev = prev.previousElementSibling;
+  }
+  return row;
+}
+
 function typewrite(bubble, onDone) {
   if (!canType || !bubble || !document.contains(bubble)) { if (onDone) onDone(); return; }
   const parts = [...bubble.querySelectorAll(':scope > strong, :scope > p')].filter(el => el.textContent.trim());
@@ -827,7 +844,18 @@ function typewrite(bubble, onDone) {
       if (ci < texts[pi].length) { parts[pi].textContent += texts[pi][ci++]; doneCount++; }
       else { pi++; ci = 0; }
     }
-    chatBody.scrollTop = chatBody.scrollHeight;
+    /* Ancrage HAUT : pendant que Batiss écrit un message du parcours, la vue
+       reste accrochée au DÉBUT du bloc d'étape (la réaction juste au-dessus
+       du message courant, sinon le message lui-même), jamais projetée en
+       bas — le visiteur lit de haut en bas, l'étape commence en haut de
+       l'écran (demande de Shawn, 23 oct. 2026).
+       Hors parcours (réponses libres), comportement clavardage : bas. */
+    const anchorRow = stepTopAnchor(bubble);
+    if (anchorRow && chatBody.contains(anchorRow)) {
+      chatBody.scrollTop += anchorRow.getBoundingClientRect().top - chatBody.getBoundingClientRect().top - 10;
+    } else {
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
     if (pi >= parts.length || doneCount >= total) {
       clearInterval(typeTimer); typeTimer = null;
       parts.forEach((el, i) => { el.innerHTML = htmls[i]; });
@@ -893,7 +921,7 @@ function renderStep() {
   if (typeTimer) { clearInterval(typeTimer); typeTimer = null; }
   chatBody.innerHTML = `<div class="chat-transcript">${contextHtml}${switchHtml}${greetingHtml()}${historyHtml()}${reactionHtml()}${stepBody()}${aiThreadHtml()}${aiFormHtml()}</div>`;
   const currentQuestion = chatBody.querySelector('.chat-thread-row.current');
-  if (currentQuestion) chatBody.scrollTop += currentQuestion.getBoundingClientRect().top - chatBody.getBoundingClientRect().top - 10;
+  if (currentQuestion) { const anchor = stepTopAnchor(currentQuestion); chatBody.scrollTop += anchor.getBoundingClientRect().top - chatBody.getBoundingClientRect().top - 10; }
   attachStepActions();
   const typing = document.getElementById('chat-typing');
   const current = chatBody.querySelector('.chat-thread-row.current');

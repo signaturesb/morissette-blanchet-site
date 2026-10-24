@@ -429,7 +429,13 @@
 /* Barre d'action collée au bas du panneau à l'étape description : le bouton
    « Cliquez pour recevoir un appel ! » est visible dès l'arrivée sur l'étape,
    sans défiler (demande de Shawn, 23 oct. 2026, 22 h 46). */
-.flow-actions-sticky{position:sticky;bottom:0;z-index:6;display:flex;flex-direction:column;gap:8px;padding:16px 0 6px;margin-top:8px;background:linear-gradient(to bottom,rgba(10,10,12,0),rgba(10,10,12,.95) 42%);}
+/* Barre d'action « dock » : fond plein, bordure et ombre — jamais un fondu
+   translucide qui chevauche le champ ville (correction de Shawn,
+   23 oct. 2026, 23 h 00). Le scroll-padding laisse toujours dégager le
+   dernier champ au-dessus de la barre. */
+#chat-body{scroll-padding-bottom:136px;}
+.flow-actions-sticky{position:sticky;bottom:0;z-index:6;display:flex;flex-direction:column;gap:8px;padding:14px 0 10px;margin-top:16px;background:rgba(15,15,18,.97);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid rgba(255,255,255,.10);box-shadow:0 -16px 30px rgba(0,0,0,.38);}
+.chat-textarea{min-height:104px;}
 
 </style>
   

@@ -429,13 +429,16 @@
 /* Barre d'action collée au bas du panneau à l'étape description : le bouton
    « Cliquez pour recevoir un appel ! » est visible dès l'arrivée sur l'étape,
    sans défiler (demande de Shawn, 23 oct. 2026, 22 h 46). */
-/* Barre d'action « dock » : fond plein, bordure et ombre — jamais un fondu
-   translucide qui chevauche le champ ville (correction de Shawn,
-   23 oct. 2026, 23 h 00). Le scroll-padding laisse toujours dégager le
-   dernier champ au-dessus de la barre. */
-#chat-body{scroll-padding-bottom:136px;}
-.flow-actions-sticky{position:sticky;bottom:0;z-index:6;display:flex;flex-direction:column;gap:8px;padding:14px 0 10px;margin-top:16px;background:rgba(15,15,18,.97);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid rgba(255,255,255,.10);box-shadow:0 -16px 30px rgba(0,0,0,.38);}
-.chat-textarea{min-height:104px;}
+/* Étape description en colonne unique symétrique : espacements uniformes,
+   ordre logique projet → dictée → ville → bouton → lien, aucun élément
+   flottant ni chevauchement (refonte pro de Shawn, 23 oct. 2026, 23 h 04 —
+   remplace l'ancienne barre collée). */
+#chat-body{scroll-padding-top:8px;scroll-padding-bottom:24px;}
+.chat-fields{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+.chat-fields .chat-input-label{margin:2px 0 0;}
+.chat-fields .chat-submit{margin-top:8px;}
+.chat-fields .chat-skip{align-self:center;margin-top:0;}
+.chat-textarea{min-height:88px;}
 
 </style>
   
@@ -833,10 +836,14 @@ function stepBody() {
     else if (question.choices) inner += optionButtons(question.choices, '', 'flow');
     if (step <= 1) inner += `<form class="chat-reply" id="flow-reply"><input id="flow-reply-input" maxlength="300" placeholder="Ou écrivez votre réponse…" aria-label="Votre réponse écrite"><button type="submit">Envoyer</button></form>`;
     if (question.input === 'description') {
-      inner += `<label class="chat-input-label" for="project-description">Votre projet</label><textarea class="chat-textarea" id="project-description" maxlength="1000" placeholder="${escapeHtml(descriptionHint())}">${escapeHtml(state.description)}</textarea>`
+      /* Colonne unique et symétrique : projet, dictée, ville, bouton, lien —
+         espacements uniformes, aucun élément flottant (refonte pro demandée
+         par Shawn, 23 oct. 2026, 23 h 04 : la barre collée chevauchait le
+         champ ville et cassait l'ordre visuel). */
+      inner += `<div class="chat-fields"><label class="chat-input-label" for="project-description">Votre projet</label><textarea class="chat-textarea" id="project-description" maxlength="1000" placeholder="${escapeHtml(descriptionHint())}">${escapeHtml(state.description)}</textarea>`
         + `<button class="chat-voice" id="voice-description" type="button" hidden><svg class="chat-voice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg><span class="chat-voice-label">Dicter ma réponse</span><span class="chat-voice-dot" aria-hidden="true"></span></button>`
         + `<label class="chat-input-label" for="project-location">Ville ou secteur du projet</label><input class="chat-input" id="project-location" maxlength="120" autocomplete="address-level2" placeholder="Ex. : Terrebonne" value="${escapeHtml(state.location)}">`
-        + `<div class="flow-actions-sticky"><button class="chat-submit" id="save-description" type="button">Cliquez pour recevoir un appel !</button>`
+        + `<button class="chat-submit" id="save-description" type="button">Cliquez pour recevoir un appel !</button>`
         + `<button class="chat-skip" id="skip-description" type="button">Je passe cette étape</button></div>`;
     }
     inner += `<p class="chat-error" id="chat-error" hidden></p>`;

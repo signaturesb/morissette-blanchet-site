@@ -430,8 +430,9 @@
   .mq-points{margin:22px 0 0;padding:0;list-style:none;display:grid;gap:9px;font-size:14.5px;font-weight:700;color:#22302a}
   .mq-points li::before{content:'✓';color:#5c7a4e;margin-right:9px;font-weight:900}
   #hero-card-slot{position:relative;height:720px}
-  #hero-card-slot .chat-panel{position:absolute!important;inset:0!important;width:100%!important;max-width:none!important;height:100%!important;border-radius:20px!important}
+  #hero-card-slot .chat-panel{opacity:0;pointer-events:none;transition:opacity .45s ease;position:absolute!important;inset:0!important;width:100%!important;max-width:none!important;height:100%!important;border-radius:20px!important}
   .chat-backdrop,.chat-teaser,.chat-launch{display:none!important}
+  #hero-card-slot.mq-ready .chat-panel{opacity:1;pointer-events:auto}
   .mq-read{padding:74px 0 30px;background:#fff}
   .mq-read h2{font-size:clamp(30px,3.4vw,44px);line-height:1.12;margin:14px 0 16px}
   .mq-read p{font-size:15.5px;line-height:1.75;color:#4a574f;max-width:720px}
@@ -462,7 +463,8 @@
 <!-- MAQUETTE — correctifs appliqués à la construction (ne pas perdre lors d'un rebâti) :
      1) dans le chatbot.js INLINÉ seulement : la réaction « Salle de bain » est vidée ('') ET le repli par service de reactionFor est court-circuité (« subtype in bySubtype ») pour ne garder que la bulle « Décrivez votre projet » (demande de Shawn, 24 oct. 23 h 20);
      2) le pilote ci-dessous règle Batiss sur Salle de bain et déplace le bouton orange sous le champ projet;
-     3) la carte s'ajuste automatiquement en hauteur (fitSlot) pour que TOUT le contenu de l'étape soit visible sans défilement interne (demande de Shawn, 24 oct. 23 h 34). -->
+     3) la carte s'ajuste automatiquement en hauteur (fitSlot) pour que TOUT le contenu de l'étape soit visible sans défilement interne (demande de Shawn, 24 oct. 23 h 34);
+     4) DÉPART PROPRE : le panneau reste masqué jusqu'à l'étape du service, et tout l'historique avant l'étape courante est élagué (pruneHistory) — la conversation visible COMMENCE à « Décrivez votre projet », aucune question ni réponse fictive avant (demande de Shawn, 24 oct. 23 h 43). -->
 
   <div class="mq-band"><div class="mq-word"><span class="l1">Construction</span><div class="rule"></div><span class="l2">Morissette Blanchet</span><div class="rule"></div></div></div>
 
@@ -571,8 +573,17 @@
         slot.style.height = Math.min(1250, slot.offsetHeight + need + 8) + 'px';
       }
     }
+    function pruneHistory() {
+      var body = document.getElementById('chat-body');
+      if (!body) return;
+      var anchor = body.querySelector('.chat-thread-row.current');
+      if (!anchor) return;
+      var n = anchor.previousElementSibling;
+      while (n) { var prev = n.previousElementSibling; n.remove(); n = prev; }
+      body.scrollTop = 0;
+    }
     var fitTimer = null;
-    var observer = new MutationObserver(function () { clearTimeout(fitTimer); fitTimer = setTimeout(fitSlot, 160); });
+    var observer = new MutationObserver(function () { clearTimeout(fitTimer); fitTimer = setTimeout(function () { pruneHistory(); fitSlot(); }, 160); });
     var chatRoot = document.getElementById('chat-panel');
     if (chatRoot) observer.observe(chatRoot, { childList: true, subtree: true });
     window.addEventListener('resize', fitSlot);
@@ -588,6 +599,11 @@
       var voice = body.querySelector('.chat-voice');
       if (sub && voice && sub.dataset.mqMoved !== '1') { sub.dataset.mqMoved = '1'; voice.parentNode.insertBefore(sub, voice); }
       if (/salle de bain, c'est la pièce|Que souhaitez-vous changer dans votre salle de bain/i.test(txt)) { clearInterval(drive); return; }
+      if (/Décrivez votre projet, si ça vous le dit/i.test(txt) && body.querySelector('.chat-submit')) {
+        pruneHistory(); fitSlot();
+        document.getElementById('hero-card-slot').classList.add('mq-ready');
+        clearInterval(drive); return;
+      }
       var btns = body.querySelectorAll('button');
       var i, t;
       for (i = 0; i < btns.length; i++) { t = btns[i].textContent.trim(); if (t.indexOf('Salle de bain') === 0) { btns[i].click(); return; } }

@@ -429,7 +429,7 @@
   .mq-sub{font-size:17px;line-height:1.6;color:#33413a;max-width:480px}
   .mq-points{margin:22px 0 0;padding:0;list-style:none;display:grid;gap:9px;font-size:14.5px;font-weight:700;color:#22302a}
   .mq-points li::before{content:'✓';color:#5c7a4e;margin-right:9px;font-weight:900}
-  #hero-card-slot{position:relative;height:600px}
+  #hero-card-slot{position:relative;height:720px}
   #hero-card-slot .chat-panel{position:absolute!important;inset:0!important;width:100%!important;max-width:none!important;height:100%!important;border-radius:20px!important}
   .chat-backdrop,.chat-teaser,.chat-launch{display:none!important}
   .mq-read{padding:74px 0 30px;background:#fff}
@@ -453,7 +453,7 @@
     .mq-hero{padding:38px 0 44px}
     .mq-hero-grid{grid-template-columns:1fr;gap:30px}
     .mq-hero-shade{background:linear-gradient(180deg,rgba(255,255,255,.94) 0%,rgba(255,255,255,.86) 55%,rgba(255,255,255,.65) 100%)}
-    #hero-card-slot{height:712px}
+    #hero-card-slot{height:780px}
     .mq-facts{grid-template-columns:1fr}
   }
 </style>
@@ -461,7 +461,8 @@
 <body>
 <!-- MAQUETTE — correctifs appliqués à la construction (ne pas perdre lors d'un rebâti) :
      1) dans le chatbot.js INLINÉ seulement : la réaction « Salle de bain » est vidée ('') ET le repli par service de reactionFor est court-circuité (« subtype in bySubtype ») pour ne garder que la bulle « Décrivez votre projet » (demande de Shawn, 24 oct. 23 h 20);
-     2) le pilote ci-dessous règle Batiss sur Salle de bain et déplace le bouton orange sous le champ projet. -->
+     2) le pilote ci-dessous règle Batiss sur Salle de bain et déplace le bouton orange sous le champ projet;
+     3) la carte s'ajuste automatiquement en hauteur (fitSlot) pour que TOUT le contenu de l'étape soit visible sans défilement interne (demande de Shawn, 24 oct. 23 h 34). -->
 
   <div class="mq-band"><div class="mq-word"><span class="l1">Construction</span><div class="rule"></div><span class="l2">Morissette Blanchet</span><div class="rule"></div></div></div>
 
@@ -554,6 +555,28 @@
     var slot = document.getElementById('hero-card-slot');
     var panel = document.getElementById('chat-panel');
     if (slot && panel) slot.appendChild(panel);
+    var slot = document.getElementById('hero-card-slot');
+    function fitSlot() {
+      var body = document.getElementById('chat-body');
+      if (!body || !slot) return;
+      var anchor = body.querySelector('.chat-thread-row.current');
+      var need;
+      if (anchor) {
+        var top = anchor.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop;
+        need = (body.scrollHeight - top) - body.clientHeight;
+      } else {
+        need = body.scrollHeight - body.clientHeight;
+      }
+      if (need > 2 && slot.offsetHeight < 1250) {
+        slot.style.height = Math.min(1250, slot.offsetHeight + need + 8) + 'px';
+      }
+    }
+    var fitTimer = null;
+    var observer = new MutationObserver(function () { clearTimeout(fitTimer); fitTimer = setTimeout(fitSlot, 160); });
+    var chatRoot = document.getElementById('chat-panel');
+    if (chatRoot) observer.observe(chatRoot, { childList: true, subtree: true });
+    window.addEventListener('resize', fitSlot);
+    setInterval(fitSlot, 1200);
     var tries = 0;
     var drive = setInterval(function () {
       tries++;

@@ -433,8 +433,10 @@
   #hero-card-slot .chat-panel{opacity:0;pointer-events:none;transition:opacity .45s ease;position:absolute!important;inset:0!important;width:100%!important;max-width:none!important;height:100%!important;border-radius:20px!important}
   .chat-backdrop,.chat-teaser,.chat-launch{display:none!important}
   #hero-card-slot.mq-ready .chat-panel{opacity:1;pointer-events:auto}
-  #hero-card-slot .chat-fields{gap:9px}
-  #hero-card-slot .chat-textarea{min-height:66px}
+  #hero-card-slot .chat-fields{gap:8px;margin-top:10px}
+  #hero-card-slot .chat-textarea{min-height:60px}
+  #hero-card-slot .chat-body{padding:16px 20px 18px}
+  #hero-card-slot .chat-bubble{padding:13px 16px}
   .mq-read{padding:74px 0 30px;background:#fff}
   .mq-read h2{font-size:clamp(30px,3.4vw,44px);line-height:1.12;margin:14px 0 16px}
   .mq-read p{font-size:15.5px;line-height:1.75;color:#4a574f;max-width:720px}
@@ -466,7 +468,7 @@
      1) dans le chatbot.js INLINÉ seulement : la réaction « Salle de bain » est vidée ('') ET le repli par service de reactionFor est court-circuité (« subtype in bySubtype ») pour ne garder que la bulle « Décrivez votre projet » (demande de Shawn, 24 oct. 23 h 20);
      2) le pilote ci-dessous règle Batiss sur Salle de bain et déplace le bouton orange sous le champ projet;
      3) la carte s'ajuste automatiquement en hauteur (fitSlot) pour que TOUT le contenu de l'étape soit visible sans défilement interne (demande de Shawn, 24 oct. 23 h 34);
-     5) ORDRE DES CHAMPS (demande de Shawn, 25 oct. 00 h 09) : projet, PUIS ville, PUIS dictée, et le bouton rouge « Cliquez pour recevoir un appel ! » EN DERNIER; la carte est aussi MISE À L'ÉCHELLE si l'écran est trop court — tout visible d'un coup, sans défiler. L'ancien déplacement du bouton orange avant la dictée est RETIRÉ.
+     5) ORDRE DES CHAMPS (demande de Shawn, 25 oct. 00 h 09) : projet, PUIS ville, PUIS dictée, et le bouton rouge « Cliquez pour recevoir un appel ! » EN DERNIER; cadrage : texte TOUJOURS à 100 % (aucune mise à l'échelle — la v15 rapetissée a été rejetée par Shawn le 25 oct. 00 h 26 : « ben trop petit »), espacements resserrés et hauteur de la carte plafonnée à l'écran pour que tout soit visible d'un coup. L'ancien déplacement du bouton orange avant la dictée est RETIRÉ.
      4) DÉPART PROPRE : le panneau reste masqué jusqu'à l'étape du service, et tout l'historique avant l'étape courante est élagué (pruneHistory) — la conversation visible COMMENCE à « Décrivez votre projet », aucune question ni réponse fictive avant (demande de Shawn, 24 oct. 23 h 43). -->
 
   <div class="mq-band"><div class="mq-word"><span class="l1">Construction</span><div class="rule"></div><span class="l2">Morissette Blanchet</span><div class="rule"></div></div></div>
@@ -578,15 +580,10 @@
       }
       if (need > 2) naturalH = Math.min(1250, slot.offsetHeight + need + 8);
       else naturalH = slot.offsetHeight;
-      slot.style.height = naturalH + 'px';
       var rect = slot.getBoundingClientRect();
-      var avail = window.innerHeight - Math.max(rect.top, 0) - 10;
-      if (naturalH > avail) {
-        var sc = Math.max(0.72, avail / naturalH);
-        panel.style.transformOrigin = 'top center';
-        panel.style.transform = 'scale(' + sc + ')';
-        slot.style.height = Math.round(naturalH * sc) + 'px';
-      }
+      var avail = window.innerHeight - Math.max(rect.top, 0) - 12;
+      var finalH = Math.min(naturalH, Math.max(avail, 420));
+      slot.style.height = finalH + 'px';
     }
     function reorderStep2() {
       var body = document.getElementById('chat-body');
@@ -629,7 +626,7 @@
       if (/Décrivez votre projet, si ça vous le dit/i.test(txt) && body.querySelector('.chat-submit')) {
         pruneHistory(); reorderStep2();
         var r0 = slot.getBoundingClientRect();
-        if (r0.top > window.innerHeight * 0.25) slot.scrollIntoView({ block: 'start' });
+        if (r0.top > 80) slot.scrollIntoView({ block: 'start', behavior: 'instant' });
         fitSlot();
         document.getElementById('hero-card-slot').classList.add('mq-ready');
         clearInterval(drive); return;

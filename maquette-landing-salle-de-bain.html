@@ -459,6 +459,10 @@
 </style>
 </head>
 <body>
+<!-- MAQUETTE — correctifs appliqués à la construction (ne pas perdre lors d'un rebâti) :
+     1) dans le chatbot.js INLINÉ seulement : la réaction « Salle de bain » est vidée ('') ET le repli par service de reactionFor est court-circuité (« subtype in bySubtype ») pour ne garder que la bulle « Décrivez votre projet » (demande de Shawn, 24 oct. 23 h 20);
+     2) le pilote ci-dessous règle Batiss sur Salle de bain et déplace le bouton orange sous le champ projet. -->
+
   <div class="mq-band"><div class="mq-word"><span class="l1">Construction</span><div class="rule"></div><span class="l2">Morissette Blanchet</span><div class="rule"></div></div></div>
 
   <section class="mq-hero">
@@ -717,7 +721,7 @@ let lastStepShown = -1;
 function reactionFor(service, subtype) {
   const bySubtype = {
     'Cuisine': 'Excellente idée — une cuisine bien pensée, ça change toute la maison.',
-    'Salle de bain': 'Parfait — la salle de bain, c’est la pièce où le changement paraît le plus vite.',
+    'Salle de bain': '',
     'Sous-sol': 'Bonne idée — un sous-sol fini, c’est de l’espace gagné sans agrandir. Habituellement, c’est une chambre, une salle de bain ou une salle familiale.',
     'Maison complète': 'Un gros beau projet — on va y aller morceau par morceau.',
     'Ajouter une pièce': 'Beau projet — décrivez-moi l’espace que vous imaginez.',
@@ -729,7 +733,7 @@ function reactionFor(service, subtype) {
     'Ouverture de mur': 'Bien noté — ouvrir un mur, ça se prépare : dites-moi ce que vous voyez.',
     'Projet commercial': 'Bien reçu — décrivez-moi le contexte commercial en quelques mots.'
   };
-  if (bySubtype[subtype]) return bySubtype[subtype];
+  if (subtype in bySubtype) return bySubtype[subtype];
   const byService = {
     'Rénovation': 'Parfait — dites-moi ce que vous aimeriez transformer.',
     'Agrandissement': 'Beau projet — dites-moi l’espace que vous voulez gagner.',

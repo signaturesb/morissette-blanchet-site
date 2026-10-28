@@ -414,7 +414,7 @@
 .chat-fields .chat-skip{align-self:center;margin-top:0;}
 .chat-textarea{min-height:88px;}
 
-</style>
+.mq-hero-v2{padding:34px 0 56px}.mq-hero-v2-inner{position:relative;z-index:2;max-width:760px}.mq-brand{font-size:15px;font-weight:800;letter-spacing:.34em;color:#2b2b28;margin:6px 0 64px}.mq-dot{color:#C2410C}.mq-eyebrow-v2{font-size:15px;font-weight:700;letter-spacing:.30em;color:#3a3a36;margin:0 0 22px}.mq-h1-v2{font-size:clamp(44px,6.2vw,86px);line-height:1.02;font-weight:800;letter-spacing:-.02em;color:#16150f;margin:0 0 26px}.mq-orange{color:#C2410C}.mq-lead-v2{font-size:clamp(22px,2.6vw,30px);font-weight:600;color:#26251f;margin:0 0 30px}.mq-cta-v2{display:inline-flex;align-items:center;gap:16px;background:#C2410C;color:#fff;border:0;border-radius:14px;padding:20px 36px;font:700 21px/1.2 'DM Sans',sans-serif;cursor:pointer;box-shadow:0 16px 34px rgba(194,65,12,.35);transition:transform .18s ease,box-shadow .18s ease,background .18s ease}.mq-cta-v2:hover{background:#A83809;transform:translateY(-2px);box-shadow:0 22px 42px rgba(194,65,12,.42)}.mq-note-v2{font-size:18px;line-height:1.55;color:#33322c;margin:26px 0 0}.mq-foot-v2{font-size:16.5px;color:#6d6c64;margin:44px 0 0}@media (max-width:700px){.mq-brand{margin-bottom:40px}.mq-cta-v2{width:100%;justify-content:center}}</style>
 <style>
   .mq-band{background:#fff;text-align:center;padding:26px 16px 20px;border-bottom:1px solid #e7e7e0}
   .mq-word{font-family:Georgia,'Times New Roman',serif;line-height:1.04;color:#274b47}
@@ -476,22 +476,18 @@
      5) ORDRE DES CHAMPS (demande de Shawn, 25 oct. 00 h 09) : projet, PUIS ville, PUIS dictée, et le bouton rouge « Cliquez pour recevoir un appel ! » EN DERNIER; cadrage : texte TOUJOURS à 100 % (aucune mise à l'échelle — la v15 rapetissée a été rejetée par Shawn le 25 oct. 00 h 26 : « ben trop petit »), espacements resserrés et hauteur de la carte plafonnée à l'écran pour que tout soit visible d'un coup. L'ancien déplacement du bouton orange avant la dictée est RETIRÉ.
      4) DÉPART PROPRE : le panneau reste masqué jusqu'à l'étape du service, et tout l'historique avant l'étape courante est élagué (pruneHistory) — la conversation visible COMMENCE à « Décrivez votre projet », aucune question ni réponse fictive avant (demande de Shawn, 24 oct. 23 h 43). -->
 
-  <div class="mq-band"><div class="mq-word"><span class="l1">Construction</span><div class="rule"></div><span class="l2">Morissette Blanchet</span><div class="rule"></div></div></div>
+  
 
-  <section class="mq-hero">
+  <section class="mq-hero mq-hero-v2">
     <div class="mq-hero-bg"></div><div class="mq-hero-shade"></div>
-    <div class="shell mq-hero-grid">
-      <div>
-        <p class="mq-eyebrow">Cet automne</p>
-        <h1>Votre salle de bain, <span class="accent">refaite de fond en comble.</span></h1>
-        <p class="mq-sub">Décrivez votre projet à <strong>Batiss</strong> — un entrepreneur vous rappelle pour en parler.</p>
-        <ul class="mq-points">
-          <li>Entrepreneur général licencié RBQ</li>
-          <li>Travaux garantis selon le Code civil du Québec</li>
-          <li>Aucun formulaire : Batiss prend vos informations en conversation</li>
-        </ul>
-      </div>
-      <div id="hero-card-slot" aria-label="Batiss — décrivez votre projet"></div>
+    <div class="shell mq-hero-v2-inner">
+      <p class="mq-brand">MORISSETTE <span class="mq-dot">•</span> BLANCHET</p>
+      <p class="mq-eyebrow-v2">RÉNOVATION DE SALLE DE BAIN</p>
+      <h1 class="mq-h1-v2">Votre salle de bain,<br><span class="mq-orange">refaite de fond en comble.</span></h1>
+      <p class="mq-lead-v2">Votre projet commence ici.</p>
+      <button class="mq-cta-v2" type="button" data-service="Rénovation">Demander ma soumission <span aria-hidden="true">→</span></button>
+      <p class="mq-note-v2">Décrivez votre projet à Batiss.<br>Un entrepreneur vous rappelle pour préciser les travaux.</p>
+      <p class="mq-foot-v2">Rénovation complète <span class="mq-dot">•</span> Accompagnement à chaque étape</p>
     </div>
   </section>
 
@@ -582,7 +578,7 @@
   (function () {
     var slot = document.getElementById('hero-card-slot');
     var panel = document.getElementById('chat-panel');
-    if (slot && panel) slot.appendChild(panel);
+    /* v2 : le panneau reste en survol, il ne vit plus dans le héros */
     var slot = document.getElementById('hero-card-slot');
     var naturalH = 0;
     function fitSlot() {
@@ -635,29 +631,7 @@
     if (chatRoot) observer.observe(chatRoot, { childList: true, subtree: true });
     window.addEventListener('resize', fitSlot);
     setInterval(fitSlot, 1200);
-    var tries = 0;
-    var drive = setInterval(function () {
-      tries++;
-      var body = document.getElementById('chat-body');
-      if (!body) return;
-      if (panel.hidden) { document.getElementById('mq-drive').click(); return; }
-      var txt = body.innerText || '';
-      reorderStep2();
-      if (/salle de bain, c'est la pièce|Que souhaitez-vous changer dans votre salle de bain/i.test(txt)) { clearInterval(drive); return; }
-      if (/Décrivez votre projet, si ça vous le dit/i.test(txt) && body.querySelector('.chat-submit')) {
-        pruneHistory(); reorderStep2();
-        var r0 = slot.getBoundingClientRect();
-        if (r0.top > 80) slot.scrollIntoView({ block: 'start', behavior: 'instant' });
-        fitSlot();
-        document.getElementById('hero-card-slot').classList.add('mq-ready');
-        clearInterval(drive); return;
-      }
-      var btns = body.querySelectorAll('button');
-      var i, t;
-      for (i = 0; i < btns.length; i++) { t = btns[i].textContent.trim(); if (t.indexOf('Salle de bain') === 0) { btns[i].click(); return; } }
-      for (i = 0; i < btns.length; i++) { t = btns[i].textContent.trim(); if (t.indexOf('Rénovation') === 0 && btns[i].className.indexOf('card') > -1) { btns[i].click(); return; } }
-      if (tries > 80) clearInterval(drive);
-    }, 400);
+    /* v2 : pas de démarrage automatique — Batiss ouvre au clic du bouton */
   })();
 </script>
 <script>
@@ -1509,7 +1483,7 @@ window.addEventListener('mb:context', event => {
 });
 restoreDraft();
 if (location.hash === '#batiss' || location.hash === '#projet') openAssistant();
-else setTimeout(() => { if (chatPanel.hidden) openAssistant(); }, 700);
+else { /* v2 : Batiss ouvre seulement au clic */ }
 document.getElementById('chat-close').addEventListener('click', closeAssistant);
 chatBackdrop.addEventListener('click', closeAssistant);
 document.addEventListener('keydown', event => {

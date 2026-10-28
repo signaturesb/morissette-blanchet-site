@@ -468,6 +468,24 @@
     .mq-facts{grid-template-columns:1fr}
   }
 </style>
+
+<style id="cta-soumission-styles">
+  body{padding-bottom:calc(88px + env(safe-area-inset-bottom, 0px))}
+  .cta-soumission{display:inline-flex;align-items:center;justify-content:center;gap:12px;background:#1C1A17;color:#fff;border:1px solid transparent;border-radius:12px;padding:16px 28px;font:600 16px/1.5 'DM Sans',sans-serif;text-decoration:none;cursor:pointer;box-shadow:0 6px 18px rgba(28,26,23,.16);transition:transform .2s ease,box-shadow .2s ease}
+  .cta-soumission:hover{transform:translateY(-2px);box-shadow:0 9px 24px rgba(28,26,23,.23)}
+  .cta-soumission:focus-visible{outline:3px solid #B89A60;outline-offset:4px}
+  .mq-gallery-cta{margin:28px 0 0;text-align:center}
+  #hero-card-slot{display:flex;align-items:center;justify-content:center}
+  #hero-card-slot:has(.chat-panel:not([hidden])) > .cta-soumission{display:none}
+  #hero-card-slot .chat-panel[hidden]{display:none!important}
+  .cta-soumission-sticky{position:fixed;bottom:0;left:0;width:100%;z-index:37;border-radius:0;padding:16px 28px calc(16px + env(safe-area-inset-bottom, 0px));justify-content:space-between;gap:12px;box-shadow:0 -4px 20px rgba(28,26,23,.16)}
+  .cta-soumission-sticky:hover{transform:none;box-shadow:0 -6px 24px rgba(28,26,23,.23)}
+  .cta-soumission-sticky .cta-label{display:inline-flex;align-items:center;gap:12px}
+  .cta-soumission-sticky .cta-label span{color:#D5B77D}
+  body:has(#chat-panel:not([hidden])) .cta-soumission-sticky{display:none}
+  @media(max-width:600px){.cta-soumission-sticky{flex-direction:column;gap:4px;font-size:14px;padding-top:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px))}.cta-soumission-sticky > span:first-child{font-size:12px}}
+  @media(prefers-reduced-motion:reduce){.cta-soumission{transition:none}.cta-soumission:hover{transform:none}}
+</style>
 </head>
 <body>
 <!-- MAQUETTE CUISINE — mêmes correctifs que la maquette salle de bain (template homogène), adaptés au service :
@@ -492,7 +510,7 @@
           <li>Aucun formulaire : Batiss prend vos informations en conversation</li>
         </ul>
       </div>
-      <div id="hero-card-slot" aria-label="Batiss — décrivez votre projet"></div>
+      <div id="hero-card-slot" aria-label="Batiss — décrivez votre projet"><button class="cta-soumission" type="button" data-service="Rénovation">Demander une soumission <span aria-hidden="true">→</span></button></div>
     </div>
   </section>
 
@@ -531,17 +549,20 @@
           <figcaption>CUISINE Nº 2 — ARMOIRES BLANCHES, ÎLOT BLEU MARIN ET OR</figcaption>
         </figure>
       </div>
+      <div class="mq-gallery-cta"><button class="cta-soumission" type="button" data-service="Rénovation">Demander une soumission <span aria-hidden="true">→</span></button></div>
       
     </div>
   </section>
 
   <section class="mq-cta">
     <div class="shell">
-      <h2>Prêt à en parler?</h2>
-      <p>Batiss prend vos informations en une minute — un entrepreneur vous rappelle ensuite.</p>
-      <button class="button button-light" type="button" data-service="Rénovation">Décrire mon projet à Batiss <span aria-hidden="true">→</span></button>
+      <h2>Parlez-nous de votre projet</h2>
+      <p>Demandez votre soumission : Batiss prend vos informations en une minute, et un entrepreneur vous rappelle ensuite. Sans frais et sans engagement.</p>
+      <button class="cta-soumission" type="button" data-service="Rénovation">Demander une soumission <span aria-hidden="true">→</span></button>
     </div>
   </section>
+
+  <button class="cta-soumission cta-soumission-sticky" type="button" data-service="Rénovation"><span>Parlez-nous de votre projet</span><span class="cta-label">Demander une soumission <span aria-hidden="true">→</span></span></button>
 
   <footer class="mq-footer">Construction Morissette Blanchet · Entrepreneur général · 819 314-8045 · Maquette de page d'atterrissage — offre à confirmer</footer>
 
@@ -598,7 +619,7 @@
     function fitSlot() {
       var body = document.getElementById('chat-body');
       var panel = document.getElementById('chat-panel');
-      if (!body || !slot || !panel) return;
+      if (!body || !slot || !panel || panel.hidden) return;
       panel.style.transform = '';
       if (naturalH) slot.style.height = naturalH + 'px';
       var anchor = body.querySelector('.chat-thread-row.current');
@@ -645,12 +666,17 @@
     if (chatRoot) observer.observe(chatRoot, { childList: true, subtree: true });
     window.addEventListener('resize', fitSlot);
     setInterval(fitSlot, 1200);
-    var tries = 0;
-    var drive = setInterval(function () {
+    var drive = null;
+    document.querySelectorAll('.cta-soumission').forEach(function (button) {
+      button.addEventListener('click', function () {
+        clearInterval(drive);
+        slot.scrollIntoView({ block: 'start', behavior: 'instant' });
+        var tries = 0;
+        drive = setInterval(function () {
       tries++;
       var body = document.getElementById('chat-body');
       if (!body) return;
-      if (panel.hidden) { document.getElementById('mq-drive').click(); return; }
+      if (panel.hidden) { clearInterval(drive); return; }
       var txt = body.innerText || '';
       reorderStep2();
       if (/une cuisine bien pensée|Que souhaitez-vous changer dans votre cuisine/i.test(txt)) { clearInterval(drive); return; }
@@ -668,6 +694,8 @@
       for (i = 0; i < btns.length; i++) { t = btns[i].textContent.trim(); if (t.indexOf('Rénovation') === 0 && btns[i].className.indexOf('card') > -1) { btns[i].click(); return; } }
       if (tries > 80) clearInterval(drive);
     }, 400);
+      });
+    });
   })();
 </script>
 <script>
@@ -1492,9 +1520,6 @@ function hideTeaser(remember) {
   if (remember) { try { sessionStorage.setItem('mb-batiss-seen', '1'); } catch { /* session storage unavailable */ } }
 }
 if (chatTeaser) {
-  let teaserSeen = false;
-  try { teaserSeen = sessionStorage.getItem('mb-batiss-seen') === '1'; } catch { teaserSeen = true; }
-  if (!teaserSeen) setTimeout(() => { if (chatPanel.hidden) chatTeaser.hidden = false; }, 2800);
   document.getElementById('chat-teaser-close')?.addEventListener('click', () => hideTeaser(true));
   chatTeaser.querySelectorAll('[data-teaser]').forEach(button => button.addEventListener('click', () => {
     const mode = button.dataset.teaser;
@@ -1518,8 +1543,7 @@ window.addEventListener('mb:context', event => {
   if (!chatPanel.hidden) renderStep();
 });
 restoreDraft();
-if (location.hash === '#batiss' || location.hash === '#projet') openAssistant();
-else setTimeout(() => { if (chatPanel.hidden) openAssistant(); }, 700);
+// Ouverture uniquement au clic sur un CTA.
 document.getElementById('chat-close').addEventListener('click', closeAssistant);
 chatBackdrop.addEventListener('click', closeAssistant);
 document.addEventListener('keydown', event => {

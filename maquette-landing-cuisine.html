@@ -1015,7 +1015,7 @@ function stepBody() {
   /* Bulle blanche avec la parution de Batiss RETIRÉE à la demande de Shawn
      (23 oct. 2026, 23 h 21) : l'étape 4 commence directement par le résumé. */
   return `<div class="chat-summary">${summaryRows().map(([label, value]) => `<div><small>${escapeHtml(label)}</small><span>${escapeHtml(value)}</span></div>`).join('')}</div>`
-    + `<button class="chat-submit" id="submit-lead" type="button">Demander l’appel</button>`
+    + `<button class="chat-submit" id="submit-lead" type="button">Demander soumission</button>`
     + `<div class="chat-actions-row"><button class="chat-back" id="copy-summary" type="button">Copier le résumé</button></div>`
     + `<p class="chat-success" id="lead-status" role="status"></p><p class="chat-success" id="copy-status" role="status"></p>`
     + `<button class="chat-restart" id="restart-chat" type="button">Commencer un autre projet</button>`;

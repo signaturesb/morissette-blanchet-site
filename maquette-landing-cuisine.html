@@ -82,8 +82,8 @@
 .site-footer .brand-mark { width:47px; height:34px; background-size:160px 347px; background-position:-55px -95px; }
 .footer-links { display:flex; gap:20px; font-size:11px; }
 .footer-links a:hover { color:#ff6d65; }
-.chat-launch { background:#e6332a; color:#fff; }
-.chat-launch:hover { background:#fa4b42; }
+.chat-launch { background:#C2410C; color:#fff; }
+.chat-launch:hover { background:#a83809; }
 .chat-spark { background:#151515; color:#fff; }
 .chat-header { background:#171717; }
 .chat-avatar { background:#e6332a; color:#fff; }
@@ -332,7 +332,7 @@
 .chat-teaser p { color:rgba(240,240,235,.72); }
 .chat-teaser .chat-button.primary { background:linear-gradient(135deg, #f0513f, #c22e20); }
 .chat-teaser .chat-button.ghost { background:rgba(255,255,255,.07); color:#f4f4ee; border-color:rgba(255,255,255,.22); }
-.chat-launch { box-shadow:0 16px 36px rgba(0,0,0,.42), 0 8px 22px rgba(200,40,25,.35); }
+.chat-launch { box-shadow:0 16px 36px rgba(0,0,0,.42), 0 8px 22px rgba(194,65,12,.35); }
 
 /* Correction verre : spécificité renforcée pour les cartes et bulles */
 .chat-panel .chat-card { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.13); color:#f4f4ee; }
@@ -1488,8 +1488,8 @@ document.getElementById('chat-back-top')?.addEventListener('click', () => {
   if (state.step === 4) { state.step = 3; state.capture = 'phone'; saveDraft(); renderStep(); return; }
   if (state.step > 0) { captureActiveFields(); state.step -= 1; saveDraft(); renderStep(); }
 });
-/* Mobile : petite icône Batiss en bas à droite, à la place des gros boutons orange (10 nov. 2026). */
-if (window.matchMedia('(max-width: 900px)').matches) {
+/* Petite icône photo Batiss en bas à droite, à la place des gros boutons orange sur mobile (10 nov. 2026). */
+{
   const launchBtn = document.getElementById('chat-launch');
   const avatarImg = document.querySelector('.chat-avatar img');
   if (launchBtn && avatarImg) {

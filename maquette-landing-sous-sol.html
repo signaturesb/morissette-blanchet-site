@@ -935,7 +935,13 @@ function summaryRows() {
    « finir le site, après on le link »). Quand le compte HubSpot existera,
    coller ici l'URL de soumission du formulaire (api.hsforms.com/…) :
    l'envoi en arrière-plan et la confirmation s'activeront tels quels. */
-const LEAD_ENDPOINT = '';
+const LEAD_ENDPOINT = 'https://batiss.shawn-0e2.workers.dev/lead';
+/* Transcription dictée (option 2, Shawn, 11 nov. 2026) : enregistrement audio
+   MediaRecorder en repli de SpeechRecognition — voir attachStepActions.
+   Point d'appel du relais Batiss : POST /transcribe (Workers AI Whisper).
+   Vide pour l'instant : tant qu'il est vide, la dictée enregistrée explique
+   que la transcription n'est pas branchée et propose le micro du clavier. */
+const TRANSCRIBE_ENDPOINT = 'https://batiss.shawn-0e2.workers.dev/transcribe';
 function leadPayload() {
   return {
     fields: [
@@ -1099,7 +1105,12 @@ function setWriting(on) {
 /* Le haut du bloc d'étape : la rangée de réaction qui précède le message
    courant quand il y en a une, sinon la rangée du message lui-même. */
 function stepTopAnchor(el) {
-  if (!el || !el.closest) return el || null;
+  /* Correctif 12 nov. 2026 (suite) : typewrite peut recevoir le faux objet
+     {querySelectorAll} d'animateTexting (réponse IA) — pas un Node :
+     chatBody.contains() levait TypeError à chaque tick (16 ms). Un
+     non-Node ne peut pas être ancré : on revient au bas du fil. */
+  if (!el || !(el instanceof Node)) return null;
+  if (!el.closest) return el;
   const row = el.closest('.chat-thread-row') || el.closest('.chat-row-avatar');
   if (!row) return el;
   let prev = row.previousElementSibling;
@@ -1114,7 +1125,11 @@ function stepTopAnchor(el) {
 }
 
 function typewrite(bubble, onDone) {
-  if (!canType || !bubble || !document.contains(bubble)) { if (onDone) onDone(); return; }
+  /* Correctif 12 nov. 2026 : animateTexting passe un faux objet {querySelectorAll}
+     pour animer la réponse IA — ce n'est pas un Node, document.contains()
+     levait TypeError à chaque question posée. On ne teste contains que
+     pour les vraies bulles DOM ; le faux objet passe comme avant. */
+  if (!canType || !bubble || (bubble instanceof Node && !document.contains(bubble))) { if (onDone) onDone(); return; }
   const parts = [...bubble.querySelectorAll(':scope > strong, :scope > p')].filter(el => el.textContent.trim());
   if (!parts.length) { if (onDone) onDone(); return; }
   const texts = parts.map(el => el.textContent);
@@ -1361,7 +1376,11 @@ function attachStepActions() {
   if (aiForm) aiForm.addEventListener('submit', event => {
     event.preventDefault();
     const value = document.getElementById('ai-question').value.trim();
-    if (value.length >= 2 && !aiPending) askAi(value);
+    /* Correctif téléphone (11 nov. 2026) : pendant la capture (étape 3), la case
+       libre du bas passait par askAi et volait les réponses — le parcours
+       restait bloqué. On passe par handleFlowText, qui reconnaît nom, courriel
+       et téléphone, et laisse toujours les vraies questions à l'IA. */
+    if (value.length >= 2 && !aiPending) { if (state.step === 3) handleFlowText(value); else askAi(value); }
   });
   chatBody.querySelectorAll('[data-quick]').forEach(button => button.addEventListener('click', () => { if (!aiPending) askAi(button.dataset.quick); }));
   const voiceButton = document.getElementById('voice-description');
@@ -1419,6 +1438,102 @@ function attachStepActions() {
         setListeningUi(true);
         recognition.start();
       } catch { showError('La dictée vocale n’est pas disponible dans ce navigateur : écrivez votre réponse.'); }
+    });
+  }
+  else if (voiceButton && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder) {
+    /* Dictée — repli enregistrement (option 2, Shawn, 11 nov. 2026) :
+       SpeechRecognition n'existe pas sur iPhone Safari ni dans le navigateur
+       intégré Facebook. On enregistre l'audio (MediaRecorder, iOS 14.5+ :
+       audio/mp4 AAC, webm/Opus dès iOS 18.4) et on l'envoie au point de
+       transcription du relais Batiss (TRANSCRIBE_ENDPOINT, Workers AI Whisper).
+       SpeechRecognition reste le premier choix là où il existe (voir ci-dessus). */
+    voiceButton.hidden = false;
+    const voiceLabel = voiceButton.querySelector('.chat-voice-label');
+    if (window.__mbRecorderStream) { try { window.__mbRecorderStream.getTracks().forEach(t => t.stop()); } catch { /* déjà arrêté */ } window.__mbRecorderStream = null; }
+    if (window.__mbRecorder) { try { if (window.__mbRecorder.state !== 'inactive') window.__mbRecorder.stop(); } catch { /* déjà arrêté */ } window.__mbRecorder = null; }
+    let recorder = null;
+    let chunks = [];
+    let stream = null;
+    let stopTimer = null;
+    let recording = false;
+    const setRecordingUi = on => {
+      voiceButton.classList.toggle('is-listening', on);
+      voiceLabel.textContent = on ? 'Enregistrement… touchez pour arrêter' : 'Dicter ma réponse';
+    };
+    const cleanupRecording = () => {
+      if (stopTimer) { clearTimeout(stopTimer); stopTimer = null; }
+      recording = false;
+      setRecordingUi(false);
+      if (stream) { try { stream.getTracks().forEach(t => t.stop()); } catch { /* déjà arrêté */ } stream = null; }
+      window.__mbRecorder = null;
+      window.__mbRecorderStream = null;
+    };
+    const pickMimeType = () => {
+      const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+      for (const candidate of candidates) {
+        try { if (MediaRecorder.isTypeSupported(candidate)) return candidate; } catch { /* non supporté */ }
+      }
+      return '';
+    };
+    const stopRecording = () => {
+      if (!recording || !recorder) return;
+      if (stopTimer) { clearTimeout(stopTimer); stopTimer = null; }
+      try { if (recorder.state !== 'inactive') recorder.stop(); } catch { cleanupRecording(); }
+    };
+    voiceButton.addEventListener('click', async () => {
+      if (recording) { stopRecording(); return; }
+      if (!TRANSCRIBE_ENDPOINT) {
+        showError('La transcription automatique n’est pas encore branchée : utilisez le micro du clavier pour dicter, ou écrivez votre réponse.');
+        return;
+      }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (error) {
+        if (error && error.name === 'NotAllowedError') showError('Le microphone est bloqué : autorisez-le dans les réglages de votre navigateur, ou utilisez le micro du clavier pour dicter.');
+        else showError('Impossible d’accéder au microphone : utilisez le micro du clavier pour dicter, ou écrivez votre réponse.');
+        return;
+      }
+      window.__mbRecorderStream = stream;
+      chunks = [];
+      try {
+        const mimeType = pickMimeType();
+        recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      } catch {
+        cleanupRecording();
+        showError('L’enregistrement audio n’est pas supporté dans ce navigateur : utilisez le micro du clavier pour dicter, ou écrivez votre réponse.');
+        return;
+      }
+      window.__mbRecorder = recorder;
+      recorder.addEventListener('dataavailable', event => { if (event.data && event.data.size) chunks.push(event.data); });
+      recorder.addEventListener('error', () => { cleanupRecording(); showError('L’enregistrement a échoué : réessayez ou écrivez votre réponse.'); });
+      recorder.addEventListener('stop', async () => {
+        const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+        cleanupRecording();
+        if (!blob.size) { showError('L’enregistrement est vide : réessayez ou écrivez votre réponse.'); return; }
+        try {
+          const form = new FormData();
+          form.append('audio', blob, 'dictee.webm');
+          form.append('language', 'fr');
+          const response = await fetch(TRANSCRIBE_ENDPOINT, { method: 'POST', body: form });
+          if (!response.ok) throw new Error('http ' + response.status);
+          const data = await response.json();
+          const text = (data && (data.text || data.transcript || '')).trim();
+          if (!text) { showError('La transcription n’a rien reconnu : réessayez ou écrivez votre réponse.'); return; }
+          const areaNow = document.getElementById('project-description');
+          if (areaNow) { areaNow.value = (areaNow.value.trim() ? areaNow.value.trim() + ' ' : '') + text; state.description = areaNow.value.trim(); }
+        } catch {
+          showError('La transcription a échoué : réessayez ou écrivez votre réponse.');
+        }
+      });
+      try {
+        recorder.start(250);
+        recording = true;
+        setRecordingUi(true);
+        stopTimer = setTimeout(() => { stopRecording(); }, 60000);
+      } catch {
+        cleanupRecording();
+        showError('L’enregistrement audio n’est pas supporté dans ce navigateur : utilisez le micro du clavier pour dicter, ou écrivez votre réponse.');
+      }
     });
   }
   const budgetRange = document.getElementById('budget-range');

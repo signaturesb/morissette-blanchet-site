@@ -405,7 +405,7 @@
 }
 
 /* Barre d'action collée au bas du panneau à l'étape description : le bouton
-   « Cliquez pour recevoir un appel ! » est visible dès l'arrivée sur l'étape,
+   « Cliquez pour recevoir votre soumission ! » est visible dès l'arrivée sur l'étape,
    sans défiler (demande de Shawn, 23 oct. 2026, 22 h 46). */
 /* Étape description en colonne unique symétrique : espacements uniformes,
    ordre logique projet → dictée → ville → bouton → lien, aucun élément
@@ -879,7 +879,7 @@ function questionFor(step) {
   switch (step) {
     case 0: return { title: 'Salut ! Moi, c’est Batiss.', subtitle: 'Choisissez un service ou autre !', choices: serviceOptions };
     case 1: return { title: flow().subtypeQuestion, subtitle: 'Choisissez l’option la plus proche. Vous pourrez préciser à l’appel.', choices: flow().subtypes };
-    case 2: return { title: 'Décrivez votre projet, si ça vous le dit.', subtitle: 'Ou cliquez directement pour recevoir un appel.', input: 'description' };
+    case 2: return { title: 'Décrivez votre projet, si ça vous le dit.', subtitle: 'Ou cliquez directement pour recevoir votre soumission.', input: 'description' };
     default: return { title: 'On vous rappelle.', subtitle: '' };
   }
 }
@@ -1045,7 +1045,7 @@ function stepBody() {
       inner += `<div class="chat-fields"><label class="chat-input-label" for="project-description">Votre projet</label><textarea class="chat-textarea" id="project-description" maxlength="1000" placeholder="${escapeHtml(descriptionHint())}">${escapeHtml(state.description)}</textarea>`
         + `<button class="chat-voice" id="voice-description" type="button" hidden><svg class="chat-voice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg><span class="chat-voice-label">Dicter ma réponse</span><span class="chat-voice-dot" aria-hidden="true"></span></button>`
         + `<label class="chat-input-label" for="project-location">Ville ou secteur du projet</label><input class="chat-input" id="project-location" maxlength="120" autocomplete="address-level2" placeholder="Ex. : Terrebonne" value="${escapeHtml(state.location)}">`
-        + `<button class="chat-submit" id="save-description" type="button">Cliquez pour recevoir un appel !</button></div>`;
+        + `<button class="chat-submit" id="save-description" type="button">Cliquez pour recevoir votre soumission !</button></div>`;
     }
     inner += `<p class="chat-error" id="chat-error" hidden></p>`;
     return inner;
